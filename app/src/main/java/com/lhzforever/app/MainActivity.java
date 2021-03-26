@@ -2,17 +2,39 @@ package com.lhzforever.app;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.media.Image;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -20,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private Button camera;
     private Button album;
     private Button test;
+    ProgressDialog progressDialog;
+    String URL ="http://121.36.36.134:5555/getIndice";
     private final int CAMERA_REQUEST = 1;
     private final int ALBUM_REQUEST = 2;
 
@@ -39,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         camera.setOnClickListener(new OnClickListener() {
-
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -57,9 +80,10 @@ public class MainActivity extends AppCompatActivity {
                             "android.permission.READ_EXTERNAL_STORAGE",
                             "android.permission.WRITE_EXTERNAL_STORAGE"},101);
                 }
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                Intent intent = new Intent();
                 intent.setType("image/*");
-                startActivityForResult(intent,ALBUM_REQUEST);
+                intent.setAction(Intent.ACTION_PICK);
+                startActivityForResult(Intent.createChooser(intent, "Select Image"), ALBUM_REQUEST);
             }
         });
 
@@ -77,13 +101,48 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
+        if (resultCode == RESULT_OK) {
             Bundle bundle = data.getExtras();
             Bitmap bitmap = (Bitmap) bundle.get("data");
-        }
-        else if (requestCode == ALBUM_REQUEST && resultCode == RESULT_OK) {
-            Bundle bundle = data.getExtras();
-            Bitmap bitmap = (Bitmap) bundle.get("data");
+
+
+            progressDialog = new ProgressDialog(MainActivity.this);
+            progressDialog.setMessage("Uploading, please wait...");
+            progressDialog.show();
+
+            //converting image to base64 string
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] imageBytes = baos.toByteArray();
+            final String imageString = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+
+            StringRequest request = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>(){
+                @Override
+                public void onResponse(String s) {
+                    progressDialog.dismiss();
+                    if(s.equals("true")){
+                        Toast.makeText(MainActivity.this, "Uploaded Successful", Toast.LENGTH_LONG).show();
+                    }
+                    else{
+                        Toast.makeText(MainActivity.this, "Some error occurred!", Toast.LENGTH_LONG).show();
+                    }
+                }
+            },new Response.ErrorListener(){
+                @Override
+                public void onErrorResponse(VolleyError volleyError) {
+                    Toast.makeText(MainActivity.this, "Some error occurred -> "+volleyError, Toast.LENGTH_LONG).show();;
+                }
+            }) {
+                //adding parameters to send
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String, String> parameters = new HashMap<String, String>();
+                    parameters.put("image", imageString);
+                    return parameters;
+                }
+            };
+            RequestQueue rQueue = Volley.newRequestQueue(MainActivity.this);
+            rQueue.add(request);
         }
     }
 }

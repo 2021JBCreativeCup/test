@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -38,10 +39,7 @@ public class ViewPagerAdapter extends RecyclerView.Adapter<ViewPagerAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewPagerAdapter.ViewHolder holder, int position) {
-        String animal = mData.get(position);
-        holder.myTextView.setText(animal);
-        holder.relativeLayout.setBackgroundResource(imageArray[position]);
-
+        holder.myImageView.setImageResource(imageArray[position]);
     }
 
     @Override
@@ -50,14 +48,13 @@ public class ViewPagerAdapter extends RecyclerView.Adapter<ViewPagerAdapter.View
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView myTextView;
+        ImageView myImageView;
         RelativeLayout relativeLayout;
 
         ViewHolder(View itemView) {
             super(itemView);
-            myTextView = itemView.findViewById(R.id.tvTitle);
+            myImageView = itemView.findViewById(R.id.image_item);
             relativeLayout = itemView.findViewById(R.id.container);
-
         }
     }
 }

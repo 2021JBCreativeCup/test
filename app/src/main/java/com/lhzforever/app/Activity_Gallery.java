@@ -38,6 +38,7 @@ public class Activity_Gallery extends AppCompatActivity {
         list.add("");
         list.add("");
         list.add("");
+        list.add("");
         mviewPager2.setAdapter(new ViewPagerAdapter(this, list, mviewPager2));
     }
 }
