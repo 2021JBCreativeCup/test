@@ -18,7 +18,7 @@
         android:theme="@style/Theme.Camerart">
 
         <activity
-            android:name=".Activity_Gallery"
+            android:name=".ActivityGallery"
             android:label="@string/title_activity__gallery"
             android:theme="@style/Theme.Camerart.NoActionBar"></activity>
         <activity android:name=".MainActivity">

@@ -1,17 +1,10 @@
 package com.lhzforever.app;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.media.Image;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -19,7 +12,6 @@ import android.util.Base64;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -27,13 +19,12 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     String URL ="http://121.36.36.134:5555/getIndice";
     private final int CAMERA_REQUEST = 1;
     private final int ALBUM_REQUEST = 2;
+    private int[] indices;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +85,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this,Activity_Gallery.class);
+                Intent intent = new Intent(MainActivity.this, ActivityGallery.class);
+                intent.putExtra("indices", MainActivity.this.indices);
                 startActivity(intent);
             }
         });
@@ -119,6 +112,8 @@ public class MainActivity extends AppCompatActivity {
             progressDialog.setMessage("Uploading, please wait...");
             progressDialog.show();
 
+            final RequestQueue rQueue = Volley.newRequestQueue(MainActivity.this);
+
             //converting image to base64 string
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
@@ -129,7 +124,13 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(String s) {
                     progressDialog.dismiss();
+                    System.out.println("Indices: " + s);
                     Toast.makeText(MainActivity.this, "Uploaded Successful", Toast.LENGTH_LONG).show();
+                    int[] indices = Arrays.stream(s.substring(1, s.length() - 1).split(","))
+                            .map(String::trim)
+                            .mapToInt(Integer::parseInt)
+                            .toArray();
+                    MainActivity.this.indices = indices;
                 }
             },new Response.ErrorListener(){
                 @Override
@@ -145,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
                     return parameters;
                 }
             };
-            RequestQueue rQueue = Volley.newRequestQueue(MainActivity.this);
             rQueue.add(request);
         }
     }
