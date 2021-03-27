@@ -27,6 +27,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -101,11 +102,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
+        Bitmap bitmap = null;
+        if (resultCode == RESULT_OK && requestCode == CAMERA_REQUEST) {
             Bundle bundle = data.getExtras();
-            Bitmap bitmap = (Bitmap) bundle.get("data");
-
-
+            bitmap = (Bitmap) bundle.get("data");
+        }
+        if (resultCode == RESULT_OK && requestCode == ALBUM_REQUEST) {
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if (resultCode == RESULT_OK) {
             progressDialog = new ProgressDialog(MainActivity.this);
             progressDialog.setMessage("Uploading, please wait...");
             progressDialog.show();
@@ -120,12 +129,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(String s) {
                     progressDialog.dismiss();
-                    if(s.equals("true")){
-                        Toast.makeText(MainActivity.this, "Uploaded Successful", Toast.LENGTH_LONG).show();
-                    }
-                    else{
-                        Toast.makeText(MainActivity.this, "Some error occurred!", Toast.LENGTH_LONG).show();
-                    }
+                    Toast.makeText(MainActivity.this, "Uploaded Successful", Toast.LENGTH_LONG).show();
                 }
             },new Response.ErrorListener(){
                 @Override
@@ -137,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 protected Map<String, String> getParams() throws AuthFailureError {
                     Map<String, String> parameters = new HashMap<String, String>();
-                    parameters.put("image", imageString);
+                    parameters.put("imageBase", imageString);
                     return parameters;
                 }
             };
